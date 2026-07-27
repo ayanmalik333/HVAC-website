@@ -9,44 +9,71 @@ export const FrameScrollCanvas: React.FC = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) return;
 
-    const images: HTMLImageElement[] = [];
+    const images: (HTMLImageElement | null)[] = new Array(TOTAL_FRAMES).fill(null);
     let targetFrameIndex = 0;
     let currentFrameIndex = 0;
+    let lastDrawnFrameIndex = -1;
     let animationFrameId: number;
+    let lastWidth = window.innerWidth;
+    let lastHeight = window.innerHeight;
 
-    // Helper to get frame image path
+    // Helper to format frame source path
     const getFrameSrc = (index: number) => {
       const frameNum = String(index + 1).padStart(3, '0');
       return `/frames/frame_${frameNum}.jpg`;
     };
 
-    // Preload all frames
-    for (let i = 0; i < TOTAL_FRAMES; i++) {
+    // Preload image frame by index
+    const loadFrame = (index: number) => {
+      if (images[index]) return images[index]!;
       const img = new Image();
-      img.src = getFrameSrc(i);
-      images.push(img);
+      img.src = getFrameSrc(index);
+      images[index] = img;
+      return img;
+    };
+
+    // Preload critical initial frames first, then load rest asynchronously
+    const frameZero = loadFrame(0);
+    frameZero.onload = () => {
+      drawFrame(frameZero);
+    };
+
+    // Batch load remaining frames in background
+    for (let i = 1; i < TOTAL_FRAMES; i++) {
+      loadFrame(i);
     }
 
-    // High DPI Canvas resize handler
+    // High DPI Canvas resize handler (ignores small mobile address bar height shifts)
     const resizeCanvas = () => {
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
+      const currentWidth = window.innerWidth;
+      const currentHeight = window.innerHeight;
+
+      // Ignore mobile address bar height toggles if width hasn't changed
+      if (currentWidth === lastWidth && Math.abs(currentHeight - lastHeight) < 80) {
+        return;
+      }
+
+      lastWidth = currentWidth;
+      lastHeight = currentHeight;
+
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = currentWidth * dpr;
+      canvas.height = currentHeight * dpr;
       
+      lastDrawnFrameIndex = -1; // Force repaint
       const frameToDraw = getNearestLoadedFrameIndex(currentFrameIndex);
       if (images[frameToDraw]) {
-        drawFrame(images[frameToDraw]);
+        drawFrame(images[frameToDraw]!);
       }
     };
 
-    // Render single frame with object-fit: cover logic
+    // Render single frame with high-performance object-fit: cover
     const drawFrame = (img: HTMLImageElement) => {
       if (!img || !img.complete || img.naturalWidth === 0) return;
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
 
@@ -75,7 +102,7 @@ export const FrameScrollCanvas: React.FC = () => {
       ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
     };
 
-    // Calculate target frame index from scroll position
+    // Calculate target frame index based on page scroll position
     const updateScrollTarget = () => {
       const scrollTop = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
       const scrollHeight = Math.max(
@@ -92,23 +119,23 @@ export const FrameScrollCanvas: React.FC = () => {
       }
     };
 
-    // Get nearest loaded frame index fallback
+    // Fallback to nearest loaded frame if current frame is buffering
     const getNearestLoadedFrameIndex = (desiredIndex: number) => {
       let idx = Math.round(desiredIndex);
       idx = Math.max(0, Math.min(TOTAL_FRAMES - 1, idx));
 
-      if (images[idx] && images[idx].complete && images[idx].naturalWidth > 0) {
+      if (images[idx] && images[idx]?.complete && images[idx]?.naturalWidth! > 0) {
         return idx;
       }
 
       for (let i = idx - 1; i >= 0; i--) {
-        if (images[i] && images[i].complete && images[i].naturalWidth > 0) {
+        if (images[i] && images[i]?.complete && images[i]?.naturalWidth! > 0) {
           return i;
         }
       }
 
       for (let i = idx + 1; i < TOTAL_FRAMES; i++) {
-        if (images[i] && images[i].complete && images[i].naturalWidth > 0) {
+        if (images[i] && images[i]?.complete && images[i]?.naturalWidth! > 0) {
           return i;
         }
       }
@@ -116,24 +143,35 @@ export const FrameScrollCanvas: React.FC = () => {
       return 0;
     };
 
-    // Animation Loop
+    // Smooth Lerp Animation Loop with Dirty Checking
     const animate = () => {
       updateScrollTarget();
-      currentFrameIndex += (targetFrameIndex - currentFrameIndex) * 0.15;
+      currentFrameIndex += (targetFrameIndex - currentFrameIndex) * 0.18;
 
       const frameIndexToDraw = getNearestLoadedFrameIndex(currentFrameIndex);
-      if (images[frameIndexToDraw]) {
-        drawFrame(images[frameIndexToDraw]);
+
+      if (frameIndexToDraw !== lastDrawnFrameIndex) {
+        const imgToDraw = images[frameIndexToDraw];
+        if (imgToDraw && imgToDraw.complete && imgToDraw.naturalWidth > 0) {
+          drawFrame(imgToDraw);
+          lastDrawnFrameIndex = frameIndexToDraw;
+        }
       }
 
       animationFrameId = requestAnimationFrame(animate);
     };
 
+    // Event Listeners
     window.addEventListener('resize', resizeCanvas);
     window.addEventListener('scroll', updateScrollTarget, { passive: true });
     window.addEventListener('touchmove', updateScrollTarget, { passive: true });
+    window.addEventListener('load', updateScrollTarget, { passive: true });
 
-    resizeCanvas();
+    // Initial setup
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+
     updateScrollTarget();
     animate();
 
@@ -141,6 +179,7 @@ export const FrameScrollCanvas: React.FC = () => {
       window.removeEventListener('resize', resizeCanvas);
       window.removeEventListener('scroll', updateScrollTarget);
       window.removeEventListener('touchmove', updateScrollTarget);
+      window.removeEventListener('load', updateScrollTarget);
       cancelAnimationFrame(animationFrameId);
     };
   }, []);
