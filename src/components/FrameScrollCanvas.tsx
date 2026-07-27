@@ -2,6 +2,9 @@ import React, { useEffect, useRef } from 'react';
 
 const TOTAL_FRAMES = 240;
 
+// Global persistent cache array to prevent garbage collection or network re-fetches
+const GLOBAL_FRAME_CACHE: (HTMLImageElement | null)[] = new Array(TOTAL_FRAMES).fill(null);
+
 export const FrameScrollCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -12,7 +15,6 @@ export const FrameScrollCanvas: React.FC = () => {
     const ctx = canvas.getContext('2d', { alpha: false });
     if (!ctx) return;
 
-    const images: (HTMLImageElement | null)[] = new Array(TOTAL_FRAMES).fill(null);
     let targetFrameIndex = 0;
     let currentFrameIndex = 0;
     let lastDrawnFrameIndex = -1;
@@ -26,32 +28,65 @@ export const FrameScrollCanvas: React.FC = () => {
       return `/frames/frame_${frameNum}.jpg`;
     };
 
-    // Preload image frame by index
-    const loadFrame = (index: number) => {
-      if (images[index]) return images[index]!;
-      const img = new Image();
-      img.src = getFrameSrc(index);
-      images[index] = img;
-      return img;
+    // Load and decode single frame directly into GPU memory
+    const loadAndDecodeFrame = async (index: number): Promise<HTMLImageElement | null> => {
+      if (GLOBAL_FRAME_CACHE[index] && GLOBAL_FRAME_CACHE[index]?.complete) {
+        return GLOBAL_FRAME_CACHE[index];
+      }
+
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.src = getFrameSrc(index);
+
+        const onDone = () => {
+          GLOBAL_FRAME_CACHE[index] = img;
+          resolve(img);
+        };
+
+        if (img.complete && img.naturalWidth > 0) {
+          onDone();
+        } else {
+          img.onload = () => {
+            if ('decode' in img) {
+              img.decode().then(onDone).catch(onDone);
+            } else {
+              onDone();
+            }
+          };
+          img.onerror = () => resolve(null);
+        }
+      });
     };
 
-    // Preload critical initial frames first, then load rest asynchronously
-    const frameZero = loadFrame(0);
-    frameZero.onload = () => {
-      drawFrame(frameZero);
+    // Concurrent Batch Preloading Pipeline
+    const preloadAllBatches = async () => {
+      const BATCH_SIZE = 24;
+
+      // 1. High-Priority Batch 0 (First 24 frames for instant initial scroll playability)
+      const priorityIndices = Array.from({ length: BATCH_SIZE }, (_, i) => i);
+      await Promise.all(priorityIndices.map(i => loadAndDecodeFrame(i)));
+
+      // Render initial frame zero immediately
+      if (GLOBAL_FRAME_CACHE[0]) {
+        drawFrame(GLOBAL_FRAME_CACHE[0]!);
+      }
+
+      // 2. Asynchronously preload remaining frames in parallel batches
+      for (let start = BATCH_SIZE; start < TOTAL_FRAMES; start += BATCH_SIZE) {
+        const batchIndices = Array.from(
+          { length: Math.min(BATCH_SIZE, TOTAL_FRAMES - start) },
+          (_, i) => start + i
+        );
+        await Promise.all(batchIndices.map(i => loadAndDecodeFrame(i)));
+      }
     };
 
-    // Batch load remaining frames in background
-    for (let i = 1; i < TOTAL_FRAMES; i++) {
-      loadFrame(i);
-    }
-
-    // High DPI Canvas resize handler (ignores small mobile address bar height shifts)
+    // High DPI Canvas resize handler
     const resizeCanvas = () => {
       const currentWidth = window.innerWidth;
       const currentHeight = window.innerHeight;
 
-      // Ignore mobile address bar height toggles if width hasn't changed
+      // Ignore mobile URL bar height toggle shifts
       if (currentWidth === lastWidth && Math.abs(currentHeight - lastHeight) < 80) {
         return;
       }
@@ -62,11 +97,11 @@ export const FrameScrollCanvas: React.FC = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = currentWidth * dpr;
       canvas.height = currentHeight * dpr;
-      
+
       lastDrawnFrameIndex = -1; // Force repaint
       const frameToDraw = getNearestLoadedFrameIndex(currentFrameIndex);
-      if (images[frameToDraw]) {
-        drawFrame(images[frameToDraw]!);
+      if (GLOBAL_FRAME_CACHE[frameToDraw]) {
+        drawFrame(GLOBAL_FRAME_CACHE[frameToDraw]!);
       }
     };
 
@@ -102,7 +137,7 @@ export const FrameScrollCanvas: React.FC = () => {
       ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
     };
 
-    // Calculate target frame index based on page scroll position
+    // Calculate target frame index based on scroll position
     const updateScrollTarget = () => {
       const scrollTop = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
       const scrollHeight = Math.max(
@@ -119,23 +154,23 @@ export const FrameScrollCanvas: React.FC = () => {
       }
     };
 
-    // Fallback to nearest loaded frame if current frame is buffering
+    // Nearest loaded frame index fallback to guarantee zero black screens
     const getNearestLoadedFrameIndex = (desiredIndex: number) => {
       let idx = Math.round(desiredIndex);
       idx = Math.max(0, Math.min(TOTAL_FRAMES - 1, idx));
 
-      if (images[idx] && images[idx]?.complete && images[idx]?.naturalWidth! > 0) {
+      if (GLOBAL_FRAME_CACHE[idx] && GLOBAL_FRAME_CACHE[idx]?.complete && GLOBAL_FRAME_CACHE[idx]?.naturalWidth! > 0) {
         return idx;
       }
 
       for (let i = idx - 1; i >= 0; i--) {
-        if (images[i] && images[i]?.complete && images[i]?.naturalWidth! > 0) {
+        if (GLOBAL_FRAME_CACHE[i] && GLOBAL_FRAME_CACHE[i]?.complete && GLOBAL_FRAME_CACHE[i]?.naturalWidth! > 0) {
           return i;
         }
       }
 
       for (let i = idx + 1; i < TOTAL_FRAMES; i++) {
-        if (images[i] && images[i]?.complete && images[i]?.naturalWidth! > 0) {
+        if (GLOBAL_FRAME_CACHE[i] && GLOBAL_FRAME_CACHE[i]?.complete && GLOBAL_FRAME_CACHE[i]?.naturalWidth! > 0) {
           return i;
         }
       }
@@ -143,7 +178,7 @@ export const FrameScrollCanvas: React.FC = () => {
       return 0;
     };
 
-    // Smooth Lerp Animation Loop with Dirty Checking
+    // Ultra-smooth 60fps Lerp Loop with GPU Frame Repaint
     const animate = () => {
       updateScrollTarget();
       currentFrameIndex += (targetFrameIndex - currentFrameIndex) * 0.18;
@@ -151,7 +186,7 @@ export const FrameScrollCanvas: React.FC = () => {
       const frameIndexToDraw = getNearestLoadedFrameIndex(currentFrameIndex);
 
       if (frameIndexToDraw !== lastDrawnFrameIndex) {
-        const imgToDraw = images[frameIndexToDraw];
+        const imgToDraw = GLOBAL_FRAME_CACHE[frameIndexToDraw];
         if (imgToDraw && imgToDraw.complete && imgToDraw.naturalWidth > 0) {
           drawFrame(imgToDraw);
           lastDrawnFrameIndex = frameIndexToDraw;
@@ -167,11 +202,12 @@ export const FrameScrollCanvas: React.FC = () => {
     window.addEventListener('touchmove', updateScrollTarget, { passive: true });
     window.addEventListener('load', updateScrollTarget, { passive: true });
 
-    // Initial setup
+    // Initial canvas dimensions setup
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = window.innerWidth * dpr;
     canvas.height = window.innerHeight * dpr;
 
+    preloadAllBatches();
     updateScrollTarget();
     animate();
 
