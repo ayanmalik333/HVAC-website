@@ -1,0 +1,6 @@
+{
+  "name": "Ex HVAC - Climate Control & Services",
+  "description": "Commercial and residential HVAC heating, ventilation, and air conditioning web application with interactive quote calculators, booking, and climate control diagnostics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
