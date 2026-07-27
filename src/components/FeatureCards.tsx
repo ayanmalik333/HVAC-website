@@ -59,7 +59,7 @@ export const FeatureCards: React.FC<FeatureCardsProps> = ({
         </div>
 
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-3 mb-12">
+        <div className="text-center max-w-3xl mx-auto space-y-3 mb-12 reveal-init">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
             Designed to Keep You Comfortable
           </h2>
@@ -71,10 +71,10 @@ export const FeatureCards: React.FC<FeatureCardsProps> = ({
 
         {/* 3-Column Grid Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {HERO_FEATURE_CARDS.map((card) => (
+          {HERO_FEATURE_CARDS.map((card, idx) => (
             <div
               key={card.id}
-              className="bg-[#0B1B2D]/10 backdrop-blur-md rounded-2xl p-8 shadow-xl border border-slate-700/50 hover:shadow-2xl hover:border-orange-500/50 transition-all duration-300 flex flex-col items-center text-center group relative overflow-hidden"
+              className={`bg-[#0B1B2D]/10 backdrop-blur-md rounded-2xl p-8 shadow-xl border border-slate-700/50 hover:shadow-2xl hover:border-orange-500/50 transition-all duration-300 flex flex-col items-center text-center group relative overflow-hidden reveal-init reveal-stagger-${(idx % 3) + 1}`}
             >
               {/* Top Subtle Hover Accent Bar */}
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -111,7 +111,7 @@ export const FeatureCards: React.FC<FeatureCardsProps> = ({
         </div>
 
         {/* Additional Trust Indicators under cards */}
-        <div className="mt-12 bg-[#0B1B2D]/10 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 shadow-lg flex flex-wrap items-center justify-around gap-6 text-center text-xs text-slate-200 font-medium">
+        <div className="mt-12 bg-[#0B1B2D]/10 backdrop-blur-md rounded-xl p-6 border border-slate-700/50 shadow-lg flex flex-wrap items-center justify-around gap-6 text-center text-xs text-slate-200 font-medium reveal-init reveal-stagger-4">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-emerald-500" />
             <span>Licensed, Bonded & Fully Insured ($5M Liability)</span>

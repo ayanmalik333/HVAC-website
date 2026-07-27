@@ -36,7 +36,7 @@ export const BottomHighlightsSection: React.FC<BottomHighlightsProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 
           {/* HIGHLIGHT 1: TOP SERVICES */}
-          <div className="bg-[#0B1B2D]/10 backdrop-blur-md rounded-2xl p-7 border border-slate-700/50 hover:border-orange-500/50 transition-all shadow-xl flex flex-col justify-between">
+          <div className="bg-[#0B1B2D]/10 backdrop-blur-md rounded-2xl p-7 border border-slate-700/50 hover:border-orange-500/50 transition-all shadow-xl flex flex-col justify-between reveal-init reveal-stagger-1">
             <div className="space-y-4">
               <div className="w-12 h-12 rounded-xl bg-orange-950/80 text-[#FF6B00] border border-orange-500/30 flex items-center justify-center font-bold">
                 <Wrench className="w-6 h-6" />
@@ -78,7 +78,7 @@ export const BottomHighlightsSection: React.FC<BottomHighlightsProps> = ({
           </div>
 
           {/* HIGHLIGHT 2: PROJECT GALLERY & SPEC SHEETS */}
-          <div className="bg-[#0B1B2D]/10 backdrop-blur-md rounded-2xl p-7 border border-slate-700/50 hover:border-orange-500/50 transition-all shadow-xl flex flex-col justify-between">
+          <div className="bg-[#0B1B2D]/10 backdrop-blur-md rounded-2xl p-7 border border-slate-700/50 hover:border-orange-500/50 transition-all shadow-xl flex flex-col justify-between reveal-init reveal-stagger-2">
             <div className="space-y-4">
               <div className="w-12 h-12 rounded-xl bg-orange-950/80 text-[#FF6B00] border border-orange-500/30 flex items-center justify-center font-bold">
                 <Layers className="w-6 h-6" />
@@ -124,7 +124,7 @@ export const BottomHighlightsSection: React.FC<BottomHighlightsProps> = ({
           </div>
 
           {/* HIGHLIGHT 3: CONTACT & DIRECT DISPATCH */}
-          <div className="bg-[#0B1B2D]/10 backdrop-blur-md rounded-2xl p-7 border border-slate-700/50 hover:border-orange-500/50 transition-all shadow-xl flex flex-col justify-between">
+          <div className="bg-[#0B1B2D]/10 backdrop-blur-md rounded-2xl p-7 border border-slate-700/50 hover:border-orange-500/50 transition-all shadow-xl flex flex-col justify-between reveal-init reveal-stagger-3">
             <div className="space-y-4">
               <div className="w-12 h-12 rounded-xl bg-orange-950/80 text-[#FF6B00] border border-orange-500/30 flex items-center justify-center font-bold">
                 <PhoneCall className="w-6 h-6" />

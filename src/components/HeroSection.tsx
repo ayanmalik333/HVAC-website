@@ -24,7 +24,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
         <div className="max-w-4xl mx-auto space-y-6 text-center flex flex-col items-center">
 
           {/* Top Pill Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-800/80 border border-slate-700 text-xs font-semibold text-orange-400">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-800/80 border border-slate-700 text-xs font-semibold text-orange-400 reveal-init">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span>Commercial & Residential Climate Engineering</span>
             <span className="text-slate-500">|</span>
@@ -32,20 +32,20 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
 
           {/* Main Title */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] text-white font-sans">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] text-white font-sans reveal-init reveal-stagger-1">
             Powerful Climate <br className="hidden sm:inline" />
             Control for <span className="text-[#FF6B00]">Business</span>
           </h1>
 
           {/* Sub-paragraph */}
-          <p className="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-normal">
+          <p className="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed font-normal reveal-init reveal-stagger-2">
             Innovative energy efficient heating, ventilation, and air conditioning solutions
             tailored to lower utility costs, protect indoor air quality, and keep your
             commercial facilities running at peak performance.
           </p>
 
           {/* Action Buttons */}
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-4">
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-4 reveal-init reveal-stagger-3">
             <button
               onClick={onOpenQuote}
               className="bg-[#FF6B00]/70 backdrop-blur-xl border border-orange-400/40 hover:bg-[#E05200]/80 text-white font-bold text-sm tracking-wide px-8 py-4 rounded-xl shadow-xl transition-all transform hover:-translate-y-0.5 cursor-pointer flex items-center gap-2"
@@ -63,7 +63,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
 
           {/* Feature Checkmarks Row */}
-          <div className="pt-4 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs text-slate-300 max-w-xl mx-auto justify-items-center">
+          <div className="pt-4 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs text-slate-300 max-w-xl mx-auto justify-items-center reveal-init reveal-stagger-4">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
               <span>24/7 Rapid Dispatch</span>
@@ -79,7 +79,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
           </div>
 
           {/* Quick Savings Callout pill */}
-          <div className="pt-2 w-full max-w-lg">
+          <div className="pt-2 w-full max-w-lg reveal-init reveal-stagger-4">
             <button
               onClick={onOpenCalculator}
               className="w-full text-left px-4 py-3 bg-[#0B1B2D]/20 backdrop-blur-md border border-slate-700/50 rounded-xl hover:border-orange-500/50 transition-all flex items-center justify-between gap-4 cursor-pointer group"

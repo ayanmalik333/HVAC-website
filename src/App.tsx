@@ -10,9 +10,12 @@ import { BookingModal } from './components/BookingModal';
 import { AdminPanelModal } from './components/AdminPanelModal';
 import { Footer } from './components/Footer';
 import { FrameScrollCanvas } from './components/FrameScrollCanvas';
+import { useScrollReveal } from './hooks/useScrollReveal';
 import { PhoneCall, Calculator, Wrench } from 'lucide-react';
 
 export default function App() {
+  useScrollReveal();
+
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [isDiagnosticOpen, setIsDiagnosticOpen] = useState(false);
   const [isBookingOpen, setIsBookingOpen] = useState(false);

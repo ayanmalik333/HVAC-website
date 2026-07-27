@@ -101,7 +101,7 @@ export const CommercialAndQuoteSection: React.FC<CommercialAndQuoteSectionProps>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
 
           {/* Left Side: Commercial Services Copy Panel */}
-          <div className="lg:col-span-6 space-y-6 bg-[#0B1B2D]/20 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-slate-700/50 shadow-xl">
+          <div className="lg:col-span-6 space-y-6 bg-[#0B1B2D]/20 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-slate-700/50 shadow-xl reveal-init reveal-stagger-1">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0B1B2D]/40 border border-slate-700/60 text-xs font-semibold text-orange-400">
               <Building2 className="w-3.5 h-3.5" />
               <span>Commercial & Industrial Climate Solutions</span>
@@ -162,7 +162,7 @@ export const CommercialAndQuoteSection: React.FC<CommercialAndQuoteSectionProps>
 
           {/* Right Side: Floating Instant Quote Form Card */}
           <div id="quote" className="lg:col-span-6">
-            <div className="bg-[#0B1B2D]/20 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-2xl text-slate-100 border border-slate-700/50 relative">
+            <div className="bg-[#0B1B2D]/20 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-2xl text-slate-100 border border-slate-700/50 relative reveal-init reveal-stagger-2">
 
               {/* Form Header */}
               <div className="mb-6 pb-4 border-b border-slate-700/60">
